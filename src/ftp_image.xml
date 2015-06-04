@@ -1,0 +1,8 @@
+<nodes>
+	<node>
+		<ip>172.16.10.130</ip>
+		<port>21</port>
+		<username>wzy_image</username>
+		<password>wzy_image</password>
+	</node>
+</nodes>

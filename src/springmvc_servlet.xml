@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.1.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-4.1.xsd"
+        default-autowire="byName">
+        
+        <context:component-scan base-package="cn.wzy.search.dao.impl" />
+        <context:component-scan base-package="cn.wzy.search.interceptor" />
+        
+        <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        	<property name="location" value="classpath:dbconfig.properties" />
+        </bean>
+        
+        <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        	<property name="driverClass" value="${driverClass}" />
+        	<property name="jdbcUrl" value="${url}" />
+        	<property name="user" value="${username}" />
+        	<property name="password" value="${password}" />
+        </bean>
+        
+        <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        	<property name="configLocation" value="classpath:mybatis_config.xml" />
+        	<property name="dataSource" ref="dataSource" />
+        </bean>
+        
+        <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate" >
+        	<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />
+        </bean>
+        
+        <!-- JDBC事务控制器 -->
+        <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        	<property name="dataSource" ref="dataSource" />
+        </bean>
+        
+      	<!-- 注解方式管理事务 -->
+        <tx:annotation-driven transaction-manager="txManager"/>
+        
+        <bean id="logInterceptor" class="cn.wzy.search.interceptor.Loginterceptor"></bean>
+        
+        <!-- 基于CGLIB库构建实现类代理 ,不使用JDK动态代理-->
+        <aop:config proxy-target-class="true">
+        	<aop:aspect id="logAspect" ref="logInterceptor">
+        		<aop:pointcut expression="execution(* cn.wzy.search.dao.impl.*.*(..))" id="method"/>
+        		<aop:before method="startMethod" pointcut-ref="method"/>
+        		<aop:after method="endMethod" pointcut-ref="method"/>
+        	</aop:aspect>
+        </aop:config>
+        
+       <import resource="mongo-config.xml"/>
+        <!-- <import resource="spring-quartz.xml"/> -->
+
+</beans>
